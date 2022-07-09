@@ -330,10 +330,10 @@ module.exports = {
         if (!(unicodePoints instanceof Array)) return '';
         return unicodePoints.map((i) => String.fromCharCode(i)).join('');
     },
+    // reverse string
+    reverseString: (str) => str.split('').reverse().join(''),
     // Capitalize
-    capitalizeFirstLetter: (string) => {
-        return string.charAt(0).toUpperCase() + string.slice(1);
-    },
+    capitalizeFirstLetter: (string) => string.charAt(0).toUpperCase() + string.slice(1),
     // Camelcase array of strings
     camelcaseStringArray: function (array) {
         if (array.constructor !== Array) return null;
@@ -388,5 +388,35 @@ module.exports = {
             }
             return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
         });
+    },
+    // crc32
+    crc32: (r) => {
+        let a;
+        let o = [];
+        let n = -1;
+        for (let c = 0; c < 256; c++) {
+            a = c;
+            for (let f = 0; f < 8; f++) a = 1 & a ? 3988292384 ^ (a >>> 1) : a >>> 1;
+            o[c] = a;
+        }
+        for (let t = 0; t < r.length; t++) n = (n >>> 8) ^ o[255 & (n ^ r.charCodeAt(t))];
+        return (-1 ^ n) >>> 0;
+    },
+    // crc32c
+    crc32c: (crc, bytes) => {
+        const POLY = 0x82f63b78;
+        crc ^= 0xffffffff;
+        for (let n = 0; n < bytes.length; n++) {
+            crc ^= bytes[n];
+            crc = crc & 1 ? (crc >>> 1) ^ POLY : crc >>> 1;
+            crc = crc & 1 ? (crc >>> 1) ^ POLY : crc >>> 1;
+            crc = crc & 1 ? (crc >>> 1) ^ POLY : crc >>> 1;
+            crc = crc & 1 ? (crc >>> 1) ^ POLY : crc >>> 1;
+            crc = crc & 1 ? (crc >>> 1) ^ POLY : crc >>> 1;
+            crc = crc & 1 ? (crc >>> 1) ^ POLY : crc >>> 1;
+            crc = crc & 1 ? (crc >>> 1) ^ POLY : crc >>> 1;
+            crc = crc & 1 ? (crc >>> 1) ^ POLY : crc >>> 1;
+        }
+        return crc ^ 0xffffffff;
     },
 };
