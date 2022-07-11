@@ -31,6 +31,8 @@ module.exports = {
     atob: (b64Encoded) => Buffer.from(b64Encoded, 'base64').toString('utf8'),
     // filter array unique elements
     uniqueArray: (array) => Array.isArray(array) && [...new Set(array)],
+    // filter array duplicates
+    arrayDuplicates: (array) => Array.isArray(array) && array.filter((item, index) => index !== array.indexOf(item)),
     // test if string is numeric
     isNumeric: (string) => !isNaN(parseFloat(string)) && isFinite(string),
     // test if type is object but not array

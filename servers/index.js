@@ -105,6 +105,7 @@ module.exports = (serverConfigs) => {
     });
     // serializing serverName
     const servers = [];
+    let allNames = [];
     preparedServers.forEach((config) => {
         let names = [];
         if (Array.isArray(config.serverName)) {
@@ -112,7 +113,13 @@ module.exports = (serverConfigs) => {
         } else {
             names.push(fn.btoa(`<${config.serverName}>`));
         }
+        allNames = allNames.concat(names);
         servers[names.join()] = new Server(config.server);
     });
+    // check for duplicate server names
+    const duplicates = fn.arrayDuplicates(allNames);
+    if (Array.isArray(duplicates) && duplicates.length) {
+        throw new Error(`${duplicates.map((item) => fn.atob(item))} server names used more than once!`);
+    }
     return servers;
 };
