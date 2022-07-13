@@ -13,6 +13,15 @@ module.exports = {
     pathJoin: function (...args) {
         return path.join(...args);
     },
+    pathDirName: function (file) {
+        return path.dirname(file);
+    },
+    pathBaseName: function (file) {
+        return path.basename(file);
+    },
+    pathExtName: function (file) {
+        return path.extname(file);
+    },
     entries: function (...pathResolveArgs) {
         return fs.readdirSync(path.resolve(...pathResolveArgs));
     },
@@ -29,19 +38,16 @@ module.exports = {
         return fs.existsSync(path.resolve(...pathResolveArgs));
     },
     isFile: function (...pathResolveArgs) {
-        return this.exists(...pathResolveArgs) && fs.lstatSync(path.resolve(...pathResolveArgs)).isFile()
+        return this.exists(...pathResolveArgs) && fs.lstatSync(path.resolve(...pathResolveArgs)).isFile();
     },
     isDirectory: function (...pathResolveArgs) {
-        return this.exists(...pathResolveArgs) && fs.lstatSync(path.resolve(...pathResolveArgs)).isDirectory()
+        return this.exists(...pathResolveArgs) && fs.lstatSync(path.resolve(...pathResolveArgs)).isDirectory();
     },
     isLink: function (...pathResolveArgs) {
-        return this.exists(...pathResolveArgs) && fs.lstatSync(path.resolve(...pathResolveArgs)).isSymbolicLink()
+        return this.exists(...pathResolveArgs) && fs.lstatSync(path.resolve(...pathResolveArgs)).isSymbolicLink();
     },
     isSocket: function (...pathResolveArgs) {
-        return this.exists(...pathResolveArgs) && fs.lstatSync(path.resolve(...pathResolveArgs)).isSocket()
-    },
-    readFile: function (...pathResolveArgs) {
-        return fs.readFileSync(path.resolve(...pathResolveArgs));
+        return this.exists(...pathResolveArgs) && fs.lstatSync(path.resolve(...pathResolveArgs)).isSocket();
     },
     link: function (target, link) {
         // if target is dir use linkDir function
@@ -108,36 +114,33 @@ module.exports = {
     mkdir: function (...pathResolveArgs) {
         return fs.mkdirSync(path.resolve(...pathResolveArgs), { recursive: true });
     },
-    writeFile: function (file, content, ...pathResolveArgs) {
-        if (process.env.NODE_ENV) throw new Error("Can't run inside a started app!");
-        if (pathResolveArgs.length === 0) throw new Error('Missing path args.');
-        if (!this.exists(...pathResolveArgs)) this.mkdir(...pathResolveArgs);
-        this.chdir(...pathResolveArgs);
-        if (this.exists(...pathResolveArgs, file)) throw new Error(`File ${path.resolve(...pathResolveArgs, file)} already exists!`);
-        fs.writeFile(file, content, function (err) {
-            if (err) throw err;
-            console.log(`File ${path.resolve(...pathResolveArgs, file)} created successfully.`);
-        });
+    readFile: function (file, options) {
+        // If options.encoding is specified then returns a string. Otherwise it returns a buffer.
+        try {
+            return fs.readFileSync(file, options);
+        } catch (error) {
+            console.log(error);
+        }
     },
-    overwriteFile: function (file, content, ...pathResolveArgs) {
+    writeFile: function (file, content, printSuccess = false) {
         if (process.env.NODE_ENV) throw new Error("Can't run inside a started app!");
-        if (pathResolveArgs.length === 0) throw new Error('Missing path args.');
-        if (!this.exists(...pathResolveArgs)) this.mkdir(...pathResolveArgs);
-        this.chdir(...pathResolveArgs);
-        fs.writeFile(file, content, function (err) {
-            if (err) throw err;
-            console.log(`File ${path.resolve(...pathResolveArgs, file)} created successfully.`);
-        });
+        try {
+            this.mkdir(this.pathDirName(file));
+            fs.writeFileSync(file, content);
+            if (printSuccess) console.log(`File ${file} written successfully.`);
+        } catch (error) {
+            console.log(error);
+        }
     },
-    appendFile: function (file, content, ...pathResolveArgs) {
+    appendFile: function (file, content, printSuccess = false) {
         if (process.env.NODE_ENV) throw new Error("Can't run inside a started app!");
-        if (pathResolveArgs.length === 0) throw new Error('Missing path args.');
-        if (!this.exists(...pathResolveArgs, file)) throw new Error(`File ${path.resolve(...pathResolveArgs, file)} does not exist!`);
-        this.chdir(...pathResolveArgs);
-        fs.appendFile(file, content, function (err) {
-            if (err) throw err;
-            console.log(`File ${path.resolve(...pathResolveArgs, file)} updated successfully.`);
-        });
+        try {
+            this.mkdir(this.pathDirName(file));
+            fs.appendFileSync(file, content);
+            if (printSuccess) console.log(`File ${file} updated successfully.`);
+        } catch (error) {
+            console.log(error);
+        }
     },
     removeFile: function (...pathResolveArgs) {
         if (fs.existsSync(path.resolve(...pathResolveArgs)) && fs.lstatSync(path.resolve(...pathResolveArgs)).isFile()) {
@@ -149,11 +152,7 @@ module.exports = {
         }
     },
     removeDir: function (...pathResolveArgs) {
-        fs.rm(path.resolve(...pathResolveArgs), { recursive: true }, (error) => {
-            if (error) {
-                console.log(error);
-            }
-        });
+        fs.rmSync(path.resolve(...pathResolveArgs), { recursive: true });
     },
     removeDirContent: function (...pathResolveArgs) {
         let entries;
